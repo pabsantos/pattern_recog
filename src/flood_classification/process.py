@@ -55,3 +55,30 @@ def check_resolution_and_crs(
             raster1 = load_raster(resampled_path, "aligned_raster")
     print("Resample finished.")
     return raster1, raster2
+
+
+def transform_to_raster(vector_layer, reference_raster, output_path):
+    gdal.Rasterize(
+        output_path,
+        vector_layer.source(),
+        options=gdal.RasterizeOptions(
+            format="GTiff",
+            outputType=gdal.GDT_Byte,
+            burnValues=[1],
+            noData=0,
+            initValues=[0],
+            xRes=reference_raster.rasterUnitsPerPixelX(),
+            yRes=reference_raster.rasterUnitsPerPixelY(),
+            outputBounds=(
+                reference_raster.extent().xMinimum(),
+                reference_raster.extent().yMinimum(),
+                reference_raster.extent().xMaximum(),
+                reference_raster.extent().yMaximum(),
+            ),
+            targetAlignedPixels=True,
+            outputSRS=reference_raster.crs().authid(),
+            creationOptions=["COMPRESS=LZW"],
+        ),
+    )
+    print("Point transformed to raster.")
+    return load_raster(output_path, "flood_raster")

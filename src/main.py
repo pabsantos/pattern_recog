@@ -4,6 +4,7 @@ from flood_classification import (
     check_resolution_and_crs,
     load_flood_points,
     load_raster,
+    transform_to_raster,
 )
 
 
@@ -23,12 +24,15 @@ def main():
         lulc = load_raster(path_lulc, "lulc")
         flood_points = load_flood_points(path_floods, "flood_points")
 
-        path_temp = "temp/resample.tif"
+        path_temp_res = "temp/resample.tif"
+        path_temp_flood = "temp/flood_raster.tif"
 
-        dtm, lulc = check_resolution_and_crs(dtm, lulc, path_dtm, path_lulc, path_temp)
-
+        dtm, lulc = check_resolution_and_crs(
+            dtm, lulc, path_dtm, path_lulc, path_temp_res
+        )
+        flood_raster = transform_to_raster(flood_points, dtm, path_temp_flood)
     finally:
-        del dtm, lulc, flood_points
+        del dtm, lulc, flood_points, flood_raster
         qgs.exitQgis()
         print("QGIS exited.")
 
