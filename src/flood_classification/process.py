@@ -9,6 +9,24 @@ from flood_classification import load_raster
 def check_resolution_and_crs(
     raster1, raster2, path_raster1, path_raster2, resampled_path
 ):
+    """
+    Checks if two raster datasets have matching coordinate reference systems (CRS) and spatial resolutions.
+    If the CRS do not match, raises a ValueError. If the resolutions differ, resamples the raster with higher resolution
+    to match the lower resolution raster using GDAL's Warp function, and reloads the resampled raster.
+
+    Args:
+        raster1: The first raster object, expected to have methods for CRS, resolution, and extent.
+        raster2: The second raster object, expected to have methods for CRS, resolution, and extent.
+        path_raster1 (str): File path to the first raster.
+        path_raster2 (str): File path to the second raster.
+        resampled_path (str): File path where the resampled raster will be saved if resampling is needed.
+
+    Returns:
+        tuple: A tuple (raster1, raster2), where one or both rasters may have been resampled to ensure matching CRS and resolution.
+
+    Raises:
+        ValueError: If the CRS of the two rasters do not match.
+    """
     crs1 = raster1.crs().authid()
     crs2 = raster2.crs().authid()
 
@@ -60,6 +78,27 @@ def check_resolution_and_crs(
 
 
 def transform_to_raster(vector_layer, reference_raster, output_path):
+    """
+    Converts a vector layer to a raster using the properties of a reference raster.
+
+    This function rasterizes the input vector layer, aligning it with the spatial resolution,
+    extent, and coordinate reference system of the provided reference raster. The output raster
+    is saved to the specified path and loaded for further processing.
+
+    Args:
+        vector_layer: The vector layer to be rasterized. Must provide a .source() method.
+        reference_raster: The reference raster whose properties (resolution, extent, CRS) will be used.
+        output_path (str): The file path where the output raster will be saved.
+
+    Returns:
+        RasterLayer: The loaded raster layer created from the rasterized vector data.
+
+    Raises:
+        Exception: If rasterization fails or input parameters are invalid.
+
+    Note:
+        Requires GDAL and a compatible raster/vector data environment.
+    """
     gdal.Rasterize(
         output_path,
         vector_layer.source(),
@@ -87,6 +126,23 @@ def transform_to_raster(vector_layer, reference_raster, output_path):
 
 
 def raster_to_dataframe(raster_layer):
+    """
+    Converts a raster layer to a pandas DataFrame with pixel values and their corresponding spatial coordinates.
+
+    Parameters:
+        raster_layer (QgsRasterLayer): The raster layer to convert.
+
+    Returns:
+        pandas.DataFrame: A DataFrame with columns:
+            - 'value': The raster pixel value (with NoData replaced by np.nan).
+            - 'x': The x-coordinate of the pixel center.
+            - 'y': The y-coordinate of the pixel center.
+
+    Notes:
+        - Assumes the raster has a single band.
+        - NoData values are replaced with np.nan.
+        - The coordinates are calculated based on the raster's extent and pixel size.
+    """
     provider = raster_layer.dataProvider()
     nodata = provider.sourceNoDataValue(1)
     extent = raster_layer.extent()
