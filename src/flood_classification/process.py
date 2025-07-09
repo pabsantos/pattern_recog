@@ -1,3 +1,5 @@
+import numpy as np
+import pandas as pd
 from osgeo import gdal
 from qgis.core import QgsCoordinateReferenceSystem
 
@@ -82,3 +84,38 @@ def transform_to_raster(vector_layer, reference_raster, output_path):
     )
     print("Point transformed to raster.")
     return load_raster(output_path, "flood_raster")
+
+
+def raster_to_dataframe(raster_layer):
+    provider = raster_layer.dataProvider()
+    nodata = provider.sourceNoDataValue(1)
+    extent = raster_layer.extent()
+    width = raster_layer.width()
+    height = raster_layer.height()
+    block = provider.block(1, extent, width, height)
+
+    array_2d = np.array(
+        [[block.value(x, y) for x in range(width)] for y in range(height)]
+    )
+
+    flat_array = array_2d.flatten()
+
+    if nodata is not None:
+        flat_array = np.where(flat_array == nodata, np.nan, flat_array)
+
+    x_origin = extent.xMinimum()
+    y_origin = extent.yMaximum()
+    pixel_width = raster_layer.rasterUnitsPerPixelX()
+    pixel_height = raster_layer.rasterUnitsPerPixelY()
+
+    x_coords = np.array(
+        [x_origin + (i % width) * pixel_width for i in range(width * height)]
+    )
+
+    y_coords = np.array(
+        [y_origin - (i // width) * pixel_height for i in range(width * height)]
+    )
+
+    df = pd.DataFrame({"value": flat_array, "x": x_coords, "y": y_coords})
+
+    return df

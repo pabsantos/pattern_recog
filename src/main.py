@@ -4,6 +4,7 @@ from flood_classification import (
     check_resolution_and_crs,
     load_flood_points,
     load_raster,
+    raster_to_dataframe,
     transform_to_raster,
 )
 
@@ -31,6 +32,17 @@ def main():
             dtm, lulc, path_dtm, path_lulc, path_temp_res
         )
         flood_raster = transform_to_raster(flood_points, dtm, path_temp_flood)
+
+        dtm_df = raster_to_dataframe(dtm)
+        lulc_df = raster_to_dataframe(lulc)
+        flood_df = raster_to_dataframe(flood_raster)
+
+        dtm_df.to_csv("temp/dtm.csv")
+        lulc_df.to_csv("temp/lulc.csv")
+        flood_df.to_csv("temp/flood.csv")
+
+        print(dtm_df.head())
+
     finally:
         del dtm, lulc, flood_points, flood_raster
         qgs.exitQgis()
