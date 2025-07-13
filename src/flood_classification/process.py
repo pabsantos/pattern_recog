@@ -143,6 +143,7 @@ def raster_to_dataframe(raster_layer):
         - NoData values are replaced with np.nan.
         - The coordinates are calculated based on the raster's extent and pixel size.
     """
+    print("Init raster_to_dataframe")
     provider = raster_layer.dataProvider()
     nodata = provider.sourceNoDataValue(1)
     extent = raster_layer.extent()
@@ -159,19 +160,19 @@ def raster_to_dataframe(raster_layer):
     if nodata is not None:
         flat_array = np.where(flat_array == nodata, np.nan, flat_array)
 
-    x_origin = extent.xMinimum()
-    y_origin = extent.yMaximum()
-    pixel_width = raster_layer.rasterUnitsPerPixelX()
-    pixel_height = raster_layer.rasterUnitsPerPixelY()
+    # x_origin = extent.xMinimum()
+    # y_origin = extent.yMaximum()
+    # pixel_width = raster_layer.rasterUnitsPerPixelX()
+    # pixel_height = raster_layer.rasterUnitsPerPixelY()
 
-    x_coords = np.array(
-        [x_origin + (i % width) * pixel_width for i in range(width * height)]
-    )
+    # x_coords = np.array(
+    #     [x_origin + (i % width) * pixel_width for i in range(width * height)]
+    # )
 
-    y_coords = np.array(
-        [y_origin - (i // width) * pixel_height for i in range(width * height)]
-    )
+    # y_coords = np.array(
+    #     [y_origin - (i // width) * pixel_height for i in range(width * height)]
+    # )
 
-    df = pd.DataFrame({"value": flat_array, "x": x_coords, "y": y_coords})
-
+    df = pd.DataFrame({"value": flat_array})
+    print("End raster_to_dataframe")
     return df
