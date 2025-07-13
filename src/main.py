@@ -1,3 +1,5 @@
+import os
+
 from qgis.core import QgsApplication
 
 from flood_classification import (
@@ -8,6 +10,8 @@ from flood_classification import (
     transform_to_raster,
 )
 
+os.environ["QT_QPA_PLATFORM"] = "offscreen"
+
 
 def main():
     QgsApplication.setPrefixPath(
@@ -15,6 +19,11 @@ def main():
     )  # Change path based on qgis instalattion and system
     qgs = QgsApplication([], False)
     qgs.initQgis()
+
+    dtm = None
+    lulc = None
+    flood_points = None
+    flood_raster = None
 
     try:
         path_dtm = "data/dtm/DTM_TTI_buffer_1km_FILLED.tif"
@@ -25,6 +34,7 @@ def main():
         lulc = load_raster(path_lulc, "lulc")
         flood_points = load_flood_points(path_floods, "flood_points")
 
+        os.makedirs("temp", exist_ok=True)
         path_temp_res = "temp/resample.tif"
         path_temp_flood = "temp/flood_raster.tif"
 
@@ -37,11 +47,11 @@ def main():
         lulc_df = raster_to_dataframe(lulc)
         flood_df = raster_to_dataframe(flood_raster)
 
-        dtm_df.to_csv("temp/dtm.csv")
-        lulc_df.to_csv("temp/lulc.csv")
-        flood_df.to_csv("temp/flood.csv")
+        dtm_df.to_parquet("temp/dtm.parquet")
+        lulc_df.to_parquet("temp/lulc.parquet")
+        flood_df.to_parquet("temp/flood.parquet")
 
-        print(dtm_df.head())
+        print("All files exported.")
 
     finally:
         del dtm, lulc, flood_points, flood_raster

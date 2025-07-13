@@ -1,0 +1,5 @@
+services:
+  qgis-app:
+    build: .
+    volumes:
+      - .:/app
